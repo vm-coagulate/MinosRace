@@ -1,0 +1,10 @@
+{
+    "Id": "MinosRace",
+    "DisplayName": "Minos race",
+    "Author": "coagulate",
+    "Version": "1.0.0",
+    "ManagerVersion": "0.21.3",
+    "Requirements": [ "TabletopTweaks-Core-0.4.5" ],
+    "AssemblyName": "MinosRace.dll",
+    "EntryMethod": "MinosRace.Main.Load"
+}
