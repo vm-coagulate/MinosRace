@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
+using Kingmaker;
 using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.Blueprints.Classes.Selection;
 using Kingmaker.Blueprints.Items.Weapons;
@@ -9,12 +11,16 @@ using Kingmaker.Designers.EventConditionActionSystem.Actions;
 using Kingmaker.Designers.Mechanics.Buffs;
 using Kingmaker.Designers.Mechanics.Facts;
 using Kingmaker.DLC;
+using Kingmaker.ResourceLinks;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases;
 using Kingmaker.UnitLogic.FactLogic;
 using Kingmaker.UnitLogic.Mechanics.Actions;
 using Kingmaker.UnitLogic.Mechanics.Components;
 using Kingmaker.Utility;
 using Kingmaker.View;
 using Kingmaker.Visual.CharactersRigidbody;
+using Kingmaker.Visual.CharacterSystem;
 using MinosRace.Context;
 using Owlcat.Runtime.Core.Utils;
 using System;
@@ -37,12 +43,15 @@ namespace MinosRace
 
         static bool Load(UnityModManager.ModEntry modEntry)
         {
-
             modEntry.OnToggle = OnToggle;
             MC.mc = new MC(modEntry);
             var harmony = new Harmony(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-
+            var myOriginalMethods = harmony.GetPatchedMethods();
+            foreach (var method in myOriginalMethods)
+            {
+                MC.mc.Logger.Log("Patched " + method.Name);
+            };
             return true;
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
@@ -54,6 +63,10 @@ namespace MinosRace
         static class BlueprintsCache_Init_Patch
         {
             static bool Initialized = false;
+            static BlueprintFeature destinyBeyondbirth, minosHorns, beeingBuff, gregarious, emphatic, Minosweaponfamiliarity;
+            static BlueprintRace HumanRace = BlueprintTools.GetBlueprint<BlueprintRace>("0a5d473ead98b0646b94495af250fdc4");
+            static BlueprintRace TieflingRace = BlueprintTools.GetBlueprint<BlueprintRace>("5c4e42124dc2b4647af6e36cf2590500");
+
             [HarmonyPriority(Priority.First)]
             [HarmonyPostfix]
             static void CreateNewBlueprints()
@@ -61,16 +74,101 @@ namespace MinosRace
                 if (Initialized)
                     return;
                 Initialized = true;
-                AddNewRace();
+                PreloadResources();
+                var minosRace = AddNewRace();
+                AddHeritages(minosRace);
             }
 
-            private static void AddNewRace()
+            private static void PreloadResources()
             {
-                BlueprintRace HumanRace = BlueprintTools.GetBlueprint<BlueprintRace>("0a5d473ead98b0646b94495af250fdc4");
-            BlueprintRace TieflingRace = BlueprintTools.GetBlueprint<BlueprintRace>("5c4e42124dc2b4647af6e36cf2590500");
+                //List<string> resources = new List<string>() {
+                //"bb6988a21733fad4296ad22537248fea",
+                //"6a5ae89de41b6b149856718b6058168f",
+                //"7b27b2063f548794e845e0ee8ea7b91b",
+                //"4a4afd8ea46ff2e438bb078495bd3531",
+                //"49b32d9af554e6742bed805d80ccde93",
+                //"f7fdd6a03bc43da4da6d913a57f28c7c",
+                //"a88d1147b9c76364db8d34d956bb6fcb",
+                //"d1dcf6b4e326a9d459ee5b2e5b7b7cbc",
+                //"6ae0e2be0e8f9f54981033b4a61f11ed",
+                //"b354195728faa79449de9b3197f3b449",
+                //"a8b95db20e630214dabfb79424494c34",
+                //"cdc8632dd9b07744eb7baa143e39bf06",
+                //"a957a3408601f9046b56015f6c40a8d3"};
+                //foreach (var item in resources)
+                //{
+                //    
+                //    ResourcesLibrary.PreloadResource<EquipmentEntity>(item);
+                //}
+                KingmakerEquipmentEntity humanbody = BlueprintTools.GetBlueprint<KingmakerEquipmentEntity>("3bdac1aeeac9158489bb53916b303271");
+                humanbody.m_FemaleArray[0].Load();
+                foreach (var item in TieflingRace.MaleOptions.m_Heads)
+                {
+                    MC.mc.Logger.Log("Preloading " + item.ToString());
+                    item.Load();
+                }
+                foreach (var item in TieflingRace.FemaleOptions.m_Heads)
+                {
+                    MC.mc.Logger.Log("Preloading " + item.ToString());
 
-            BlueprintFeature destinyBeyondbirth, minosHorns, beeingBuff,gregarious,emphatic,Minosweaponfamiliarity;
-                CreateFeatures(out destinyBeyondbirth, out minosHorns, out beeingBuff,out gregarious, out emphatic, out Minosweaponfamiliarity);
+                    item.Load();
+                }
+                var preset = TieflingRace.Presets[0];
+                {
+                    foreach (var item in preset.m_Skin.Get().m_MaleArray)
+                    {
+                        MC.mc.Logger.Log("Preloading " + item.ToString());
+
+                        item.Load();
+                    }
+                    foreach (var item in preset.m_Skin.Get().m_FemaleArray)
+                    {
+                        MC.mc.Logger.Log("Preloading " + item.ToString());
+
+                        item.Load();
+                    }
+                }
+
+            }
+
+            private static BlueprintRace AddNewRace()
+            {
+                BlueprintRaceVisualPreset tiefling_standard = BlueprintTools.GetBlueprint<BlueprintRaceVisualPreset>("4bbf7e0e8d2f0e84e8236bea2df185ff");
+                BlueprintRaceVisualPreset tiefling_thin = BlueprintTools.GetBlueprint<BlueprintRaceVisualPreset>("4d9124908caec8145b733ecbd2896b23");
+                BlueprintRaceVisualPreset tiefling_thicc = BlueprintTools.GetBlueprint<BlueprintRaceVisualPreset>("8b485a757f883734585da9b8b816d1d6");
+                KingmakerEquipmentEntity tieflingskin = BlueprintTools.GetBlueprint<KingmakerEquipmentEntity>("d38a9d4a2cfe38e499a72b583317f993");
+                KingmakerEquipmentEntity minosskin = Helpers.CreateBlueprint<KingmakerEquipmentEntity>(MC.mc, "MinosSkin",
+                    bp =>
+                    {
+                        bp.m_MaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
+                            new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="3DC74FD208974CDDA9B53864635CC1E2".ToLower()},
+                        new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="a15b0963b1a047f7b151a1e4a0f38281".ToLower() } };
+                        bp.m_FemaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
+                            new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="9F18B0C4E57646DDA309DABD030A4B79".ToLower()},
+                        new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="a15b0963b1a047f7b151a1e4a0f38281".ToLower() } };
+                    });
+                var standardpreset = Helpers.CreateBlueprint<BlueprintRaceVisualPreset>(MC.mc, "minosStandardVisual",
+                    bp =>
+                    {
+                        bp.MaleSkeleton = tiefling_standard.MaleSkeleton;
+                        bp.FemaleSkeleton = tiefling_standard.FemaleSkeleton;
+                        bp.m_Skin = minosskin.ToReference<KingmakerEquipmentEntityReference>();
+                    });
+                var thiccpreset = Helpers.CreateBlueprint<BlueprintRaceVisualPreset>(MC.mc, "minosThiccVisual",
+                   bp =>
+                   {
+                       bp.MaleSkeleton = tiefling_thicc.MaleSkeleton;
+                       bp.FemaleSkeleton = tiefling_thicc.FemaleSkeleton;
+                       bp.m_Skin = minosskin.ToReference<KingmakerEquipmentEntityReference>();
+                   });
+                var thinpreset = Helpers.CreateBlueprint<BlueprintRaceVisualPreset>(MC.mc, "minosThinVisual",
+                   bp =>
+                   {
+                       bp.MaleSkeleton = tiefling_thin.MaleSkeleton;
+                       bp.FemaleSkeleton = tiefling_thin.FemaleSkeleton;
+                       bp.m_Skin = minosskin.ToReference<KingmakerEquipmentEntityReference>();
+                   });
+                CreateFeatures(out destinyBeyondbirth, out minosHorns, out beeingBuff, out gregarious, out emphatic, out Minosweaponfamiliarity);
                 var MinosRace = Helpers.CreateBlueprint<BlueprintRace>(MC.mc, "MinosRace",
                     bp =>
                     {
@@ -83,49 +181,81 @@ namespace MinosRace
                            "get along much better with humans due to their gregarious nature. Those that decide to adventure, instead " +
                            "of living a life of farming, often make use of their greater physical prowess in battle.");
                         bp.SelectableRaceStat = false;
-                        bp.m_Features=bp.m_Features.AddRangeToArray(new BlueprintFeatureBaseReference[] {
+                        bp.m_Features = bp.m_Features.AddRangeToArray(new BlueprintFeatureBaseReference[] {
                         minosHorns.ToReference<BlueprintFeatureBaseReference>(),
-                        beeingBuff.ToReference<BlueprintFeatureBaseReference>() });
-                        bp.m_Presets = TieflingRace.m_Presets;
-                        bp.MaleOptions = TieflingRace.MaleOptions;
-                        bp.FemaleOptions = TieflingRace.FemaleOptions;
+                        beeingBuff.ToReference<BlueprintFeatureBaseReference>(),
+                        gregarious.ToReference<BlueprintFeatureBaseReference>(),
+                        emphatic.ToReference<BlueprintFeatureBaseReference>(),
+                        Minosweaponfamiliarity.ToReference<BlueprintFeatureBaseReference>()
+                    });
+                        bp.m_Presets = new BlueprintRaceVisualPresetReference[] {
+                        standardpreset.ToReference<BlueprintRaceVisualPresetReference>(),
+                        thiccpreset.ToReference<BlueprintRaceVisualPresetReference>(),
+                        thinpreset.ToReference<BlueprintRaceVisualPresetReference>() };
+                        bp.MaleOptions = new CustomizationOptions()
+                        {
+                            m_Heads = 
+                            new Kingmaker.ResourceLinks.EquipmentEntityLink[]
+                            {
+                            MakeEELink("8F54696DE3524E67BED4FBF41BAE13BA".ToLower()),
+                            MakeEELink("2F97A2D7186B4DA08737DADDF29C5C40".ToLower()),
+                            MakeEELink("38E57963F5D8430D8D0F0F5EB809F72D".ToLower()),
+                            MakeEELink("3F3C16C2626A446BBB8932C3539F4CB9".ToLower()),
+                            MakeEELink("7E8973B0DC58464F851B8ED610175E08".ToLower()),
+
+                            },
+                            m_Eyebrows = TieflingRace.MaleOptions.m_Eyebrows,
+                            m_Hair = TieflingRace.MaleOptions.m_Hair,
+                            Horns = TieflingRace.MaleOptions.Horns
+                        };
+
+
+                        bp.FemaleOptions = new CustomizationOptions()
+                        {
+                            m_Heads = new Kingmaker.ResourceLinks.EquipmentEntityLink[]
+                            {
+                            MakeEELink("7E54EC353B6B4F6AB71BAAC3EBBDDFBD".ToLower()),
+                            MakeEELink("DB683CE3EF724EF6929CE723C5BA986D".ToLower()),
+                            MakeEELink("7DCBF6B10FC44FF79AB0C74F8E5899E0".ToLower()),
+                            MakeEELink("E24AFA3ABEE0418E833E77239DDE8C1A".ToLower()),
+                            MakeEELink("0C58485A0FD3482DBCA901E8508B4CD3".ToLower()),
+
+                            },
+
+
+                            m_Eyebrows = TieflingRace.FemaleOptions.m_Eyebrows,
+                            m_Hair = TieflingRace.FemaleOptions.m_Hair,
+                            Horns = TieflingRace.FemaleOptions.Horns
+                        }; ;
                         bp.RaceId = Race.Catfolk;
                         bp.SoundKey = "Human";
                         bp.MaleSpeedSettings = HumanRace.MaleSpeedSettings;
                         bp.FemaleSpeedSettings = HumanRace.FemaleSpeedSettings;
 
-                        bp.AddComponent<AddStatBonus>(
-                           c =>
-                           {
-                               c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
-                               c.Stat = Kingmaker.EntitySystem.Stats.StatType.Strength;
-                               c.Value = 4;
-                           });
-                        bp.AddComponent<AddStatBonusIfHasFact>(
-                          c =>
-                          {
-                              c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
-                              c.Stat = Kingmaker.EntitySystem.Stats.StatType.Dexterity;
-                              c.Value = -2;
-                              c.InvertCondition = true;
-                              c.m_CheckedFacts = c.m_CheckedFacts.AddToArray(destinyBeyondbirth.ToReference<BlueprintUnitFactReference>());
-                          });
-                        bp.AddComponent<AddStatBonus>(
-                          c =>
-                          {
-                              c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
-                              c.Stat = Kingmaker.EntitySystem.Stats.StatType.SkillPersuasion;
-                              c.Value = 2;
-                          });
 
-                        bp.AddComponent<AddClassSkill>(c => { c.Skill = Kingmaker.EntitySystem.Stats.StatType.SkillPersuasion; });
+
                     });
-                BlueprintRoot.Instance.Progression.m_CharacterRaces=BlueprintRoot.Instance.Progression.m_CharacterRaces.AddToArray(MinosRace.ToReference<BlueprintRaceReference>());
+                BlueprintRoot.Instance.Progression.m_CharacterRaces = BlueprintRoot.Instance.Progression.m_CharacterRaces.AddToArray(MinosRace.ToReference<BlueprintRaceReference>());
+                return MinosRace;
             }
 
-            private static void AddNewHeritage()
+            private static EquipmentEntityLink MakeEELink(string assetId)
             {
-                
+                return new Kingmaker.ResourceLinks.EquipmentEntityLink()
+                {
+                    AssetId = assetId,
+                    m_Handle = new Kingmaker.ResourceManagement.BundledResourceHandle<EquipmentEntity>()
+                    {
+                        m_AssetId = assetId,
+                        Object = ResourcesLibrary.TryGetResource<EquipmentEntity>(assetId, false, true),
+                        m_Held = true,
+                    },
+                };
+            }
+
+            private static void AddHeritages(BlueprintRace minosRace)
+            {
+                var extrafeat = BlueprintTools.GetBlueprint<BlueprintFeatureSelection>("247a4068296e8be42890143f451b4b45");
                 //heritage-none
                 var NoAlternateTrait = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "NoAlternateTrait", bp =>
                 {
@@ -134,36 +264,91 @@ namespace MinosRace
                     bp.Groups = new FeatureGroup[] { FeatureGroup.Racial };
                     bp.HideInUI = true;
                     bp.HideInCharacterSheetAndLevelUp = true;
-                    bp.SetName(MC.mc, "None");
-                    bp.SetDescription(MC.mc, "No Alternate Trait");
-                    bp.AddComponent<ChangeVisualSize>(c => { c.Multiplier = 1f; c.reset = true; });
+                    bp.SetName(MC.mc, "Basic");
+                    bp.SetDescription(MC.mc, "Your typical minos.");
+                    bp.AddComponent<AddStatBonus>(
+                          c =>
+                          {
+                              c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                              c.Stat = Kingmaker.EntitySystem.Stats.StatType.Strength;
+                              c.Value = 4;
+                          });
+                    bp.AddComponent<AddStatBonusIfHasFact>(
+                      c =>
+                      {
+                          c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                          c.Stat = Kingmaker.EntitySystem.Stats.StatType.Dexterity;
+                          c.Value = -2;
+                          c.InvertCondition = true;
+                          c.m_CheckedFacts = c.m_CheckedFacts.AddToArray(destinyBeyondbirth.ToReference<BlueprintUnitFactReference>());
+                      });
                 });
                 //heritage-minos
-                BlueprintFeature destinyBeyondbirth, minosHorns, beeingBuff, gregarious, emphatic, Minosweaponfamiliarity;
-                CreateFeatures(out destinyBeyondbirth, out minosHorns, out beeingBuff, out gregarious, out emphatic, out Minosweaponfamiliarity);
-                var minosTrait = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "MinosHeritage",
+                var SmallminosTrait = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "SmallBuildHeritage",
+                   bp =>
+                   {
+                       bp.IsClassFeature = true;
+                       bp.Ranks = 1;
+                       bp.Groups = new FeatureGroup[] { FeatureGroup.Racial };
+                       bp.HideInUI = true;
+                       bp.HideInCharacterSheetAndLevelUp = true;
+                       bp.SetName(MC.mc, "Small build");
+                       bp.SetDescription(MC.mc, "Although it doesn't happen often due to the size difference between minos and other " +
+                           "humanoids, some minos have a parent from another race (usually human) and are smaller than ordinary minos, " +
+                           "but are also more adaptable. They select one extra feat at 1st level, and gain a +2 racial bonus to " +
+                           "Strength. This racial trait replaces Powerful Build and the minos' usual racial ability score modifiers.");
+                       bp.AddComponent<RemoveFeatureOnApply>(
+                           c =>
+                           {
+                               c.m_Feature = beeingBuff.ToReference<BlueprintUnitFactReference>();
+                           });
+                       bp.AddComponent<AddStatBonus>(
+                         c =>
+                         {
+                             c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                             c.Stat = Kingmaker.EntitySystem.Stats.StatType.Strength;
+                             c.Value = 2;
+                         });
+                       bp.AddComponent<ChangeVisualSize>(c => { c.ExtraSizePercent = 0.1f; });
+
+                   });
+                var charismaBonus = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "TimidCharming",
                     bp =>
                     {
-                        bp.IsClassFeature = true;
-                        bp.Ranks = 1;
-                        bp.Groups = new FeatureGroup[] { FeatureGroup.Racial };
-                        bp.HideInUI = true;
-                        bp.HideInCharacterSheetAndLevelUp = true;
-                        bp.SetName(MC.mc, "Minos");
-                        bp.SetDescription(MC.mc, "Minotaur blooded, or simply called minos, have both human and minotaur blood " +
-                            "running through their veins, but are considered their own separate race. Their faces look human, and " +
-                            "their skin is smooth and hairless, but they do have the horns and tail of a minotaur. Despite their " +
-                            "size and heritage, they are mostly peaceful, which is why most true minotaurs consider it an insult " +
-                            "that they are related. They are not drawn towards the abyss or hell like tieflings are, and they usually " +
-                            "get along much better with humans due to their gregarious nature. Those that decide to adventure, instead " +
-                            "of living a life of farming, often make use of their greater physical prowess in battle.");
+                        bp.SetName(MC.mc, "Charming");
+                        bp.SetDescription(MC.mc, "Some minos are born more timid than others, but are also more gifted in their mental " +
+                        "pursuits. They gain a +2 racial bonus to Charisma. This racial trait replaces Gregarious, Minos Horns, " +
+                        "and Minos Weapon Familiarity.");
+
+                        bp.AddComponent<RemoveFeatureOnApply>(
+                         c =>
+                         {
+                             c.m_Feature = gregarious.ToReference<BlueprintUnitFactReference>();
+                         });
+                        bp.AddComponent<RemoveFeatureOnApply>(
+                           c =>
+                           {
+                               c.m_Feature = minosHorns.ToReference<BlueprintUnitFactReference>();
+                           });
+                        bp.AddComponent<RemoveFeatureOnApply>(
+                           c =>
+                           {
+                               c.m_Feature = Minosweaponfamiliarity.ToReference<BlueprintUnitFactReference>();
+                           });
                         bp.AddComponent<AddStatBonus>(
-                            c =>
-                            {
-                                c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
-                                c.Stat = Kingmaker.EntitySystem.Stats.StatType.Strength;
-                                c.Value = 4;
-                            });
+                      c =>
+                      {
+                          c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                          c.Stat = Kingmaker.EntitySystem.Stats.StatType.Charisma;
+                          c.Value = 2;
+                      });
+                        bp.AddComponent<AddStatBonus>(
+                         c =>
+                         {
+                             c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                             c.Stat = Kingmaker.EntitySystem.Stats.StatType.Strength;
+                             c.Value = 4;
+                         });
                         bp.AddComponent<AddStatBonusIfHasFact>(
                           c =>
                           {
@@ -173,46 +358,138 @@ namespace MinosRace
                               c.InvertCondition = true;
                               c.m_CheckedFacts = c.m_CheckedFacts.AddToArray(destinyBeyondbirth.ToReference<BlueprintUnitFactReference>());
                           });
-                        bp.AddComponent<AddStatBonus>(
+
+                    });
+                var wisdomBonus = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "TimidContemplating",
+                  bp =>
+                  {
+                      bp.SetName(MC.mc, "Contemplating");
+                      bp.SetDescription(MC.mc, "Some minos are born more timid than others, but are also more gifted in their mental " +
+                      "pursuits. They gain a +2 racial bonus to  Wisdom. This racial trait replaces Gregarious, Minos Horns, " +
+                      "and Minos Weapon Familiarity.");
+
+                      bp.AddComponent<RemoveFeatureOnApply>(
+                       c =>
+                       {
+                           c.m_Feature = gregarious.ToReference<BlueprintUnitFactReference>();
+                       });
+                      bp.AddComponent<RemoveFeatureOnApply>(
+                         c =>
+                         {
+                             c.m_Feature = minosHorns.ToReference<BlueprintUnitFactReference>();
+                         });
+                      bp.AddComponent<RemoveFeatureOnApply>(
+                         c =>
+                         {
+                             c.m_Feature = Minosweaponfamiliarity.ToReference<BlueprintUnitFactReference>();
+                         });
+                      bp.AddComponent<AddStatBonus>(
+                    c =>
+                    {
+                        c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                        c.Stat = Kingmaker.EntitySystem.Stats.StatType.Wisdom;
+                        c.Value = 2;
+                    });
+                      bp.AddComponent<AddStatBonus>(
+                         c =>
+                         {
+                             c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                             c.Stat = Kingmaker.EntitySystem.Stats.StatType.Strength;
+                             c.Value = 4;
+                         });
+                      bp.AddComponent<AddStatBonusIfHasFact>(
+                        c =>
+                        {
+                            c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                            c.Stat = Kingmaker.EntitySystem.Stats.StatType.Dexterity;
+                            c.Value = -2;
+                            c.InvertCondition = true;
+                            c.m_CheckedFacts = c.m_CheckedFacts.AddToArray(destinyBeyondbirth.ToReference<BlueprintUnitFactReference>());
+                        });
+
+                  });
+                var intBonus = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "TimidGenius",
+                bp =>
+                {
+                    bp.SetName(MC.mc, "Genius");
+                    bp.SetDescription(MC.mc, "Some minos are born more timid than others, but are also more gifted in their mental " +
+                    "pursuits. They gain a +2 racial bonus to  Intelligence. This racial trait replaces Gregarious, Minos Horns, " +
+                    "and Minos Weapon Familiarity.");
+
+                    bp.AddComponent<RemoveFeatureOnApply>(
+                     c =>
+                     {
+                         c.m_Feature = gregarious.ToReference<BlueprintUnitFactReference>();
+                     });
+                    bp.AddComponent<RemoveFeatureOnApply>(
+                       c =>
+                       {
+                           c.m_Feature = minosHorns.ToReference<BlueprintUnitFactReference>();
+                       });
+                    bp.AddComponent<RemoveFeatureOnApply>(
+                       c =>
+                       {
+                           c.m_Feature = Minosweaponfamiliarity.ToReference<BlueprintUnitFactReference>();
+                       });
+                    bp.AddComponent<AddStatBonus>(
                           c =>
                           {
                               c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
-                              c.Stat = Kingmaker.EntitySystem.Stats.StatType.SkillPersuasion;
+                              c.Stat = Kingmaker.EntitySystem.Stats.StatType.Intelligence;
                               c.Value = 2;
                           });
+                    bp.AddComponent<AddStatBonus>(
+                         c =>
+                         {
+                             c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                             c.Stat = Kingmaker.EntitySystem.Stats.StatType.Strength;
+                             c.Value = 4;
+                         });
+                    bp.AddComponent<AddStatBonusIfHasFact>(
+                      c =>
+                      {
+                          c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                          c.Stat = Kingmaker.EntitySystem.Stats.StatType.Dexterity;
+                          c.Value = -2;
+                          c.InvertCondition = true;
+                          c.m_CheckedFacts = c.m_CheckedFacts.AddToArray(destinyBeyondbirth.ToReference<BlueprintUnitFactReference>());
+                      });
 
-                        bp.AddComponent<AddClassSkill>(c => { c.Skill = Kingmaker.EntitySystem.Stats.StatType.SkillPersuasion; });
-                        bp.AddComponent<AddFacts>(
-                            c =>
-                            {
-                                c.m_Facts = c.m_Facts.AddRangeToArray(new BlueprintUnitFactReference[]
-                                {
-                                    minosHorns.ToReference<BlueprintUnitFactReference>(),
-                                    beeingBuff.ToReference<BlueprintUnitFactReference>()
-                                });
-                                //c.AddActionActivated(new ContextActionAddFeature() { m_PermanentFeature = minosHorns.ToReference<BlueprintFeatureReference>() });
-                                //c.AddActionActivated(new ContextActionAddFeature() { m_PermanentFeature = beeingBuff.ToReference<BlueprintFeatureReference>() });
+                });
+                var TimidMinosTrait = Helpers.CreateBlueprint<BlueprintFeatureSelection>(MC.mc, "TimidHeritage",
+                   bp =>
+                   {
+                       bp.IsClassFeature = true;
+                       bp.Ranks = 1;
+                       bp.Groups = new FeatureGroup[] { FeatureGroup.Racial };
+                       bp.HideInUI = true;
+                       bp.HideInCharacterSheetAndLevelUp = true;
+                       bp.SetName(MC.mc, "Timid");
+                       bp.SetDescription(MC.mc, "Some minos are born more timid than others, but are also more gifted in their mental " +
+                           "pursuits. They gain a +2 racial bonus to one mental ability score of their choice (Intelligence, Wisdom, " +
+                           "or Charisma). This racial trait replaces Gregarious, Minos Horns, and Minos Weapon Familiarity.");
+                       bp.AddFeatures(intBonus, wisdomBonus, charismaBonus);
 
-                            });
-                    });
+                   });
                 //create heritage selection 
-                BlueprintFeatureSelection heritageSelection = Helpers.CreateBlueprint<BlueprintFeatureSelection>(MC.mc, "HumanHeritageSelection",
+                BlueprintFeatureSelection heritageSelection = Helpers.CreateBlueprint<BlueprintFeatureSelection>(MC.mc, "MinosHeritageSelection",
                     bp =>
                     {
                         bp.SetName(MC.mc, "Racial heritage");
-                        bp.SetDescription(MC.mc, "Some humans have other races in their family tree.");
+                        bp.SetDescription(MC.mc, "Various places and living conditions create sub-races different from their peers. " +
+                            "They gain unique racial traits in exchange for losing some of the usual ones.");
                         bp.Groups = bp.Groups.AddToArray(FeatureGroup.Racial);
                         bp.IsClassFeature = true;
-                        bp.SetFeatures(NoAlternateTrait, minosTrait);
+                        bp.SetFeatures(NoAlternateTrait, SmallminosTrait, TimidMinosTrait);
 
                     });
 
                 //add heritage selection to race
-                var HumanRace = BlueprintTools.GetBlueprint<BlueprintRace>("0a5d473ead98b0646b94495af250fdc4");
-                HumanRace.m_Features = HumanRace.m_Features.AddToArray(heritageSelection.ToReference<BlueprintFeatureBaseReference>());
+
+                minosRace.m_Features = minosRace.m_Features.AddToArray(heritageSelection.ToReference<BlueprintFeatureBaseReference>());
             }
 
-            private static void CreateFeatures(out BlueprintFeature destinyBeyondbirth, out BlueprintFeature minosHorns, 
+            private static void CreateFeatures(out BlueprintFeature destinyBeyondbirth, out BlueprintFeature minosHorns,
                 out BlueprintFeature beeingBuff, out BlueprintFeature gregarious, out BlueprintFeature emphatic, out BlueprintFeature minosweaponfamiliarity)
             {
                 destinyBeyondbirth = BlueprintTools.GetBlueprint<BlueprintFeature>("325f078c584318849bfe3da9ea245b9d");
@@ -234,8 +511,10 @@ namespace MinosRace
                 beeingBuff = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "PowerfulBuild",
                     bp =>
                     {
+
                         bp.SetName(MC.mc, "Powerful build");
-                        bp.SetDescription(MC.mc, "Minos are buff AF.");
+                        bp.SetDescription(MC.mc, "Minos have a powerful build that grants them a +2 bonus to combat maneuver checks and combat maneuver defense, 300 lbs. increased carrying capacity, and increased damage with melee weapons as if they were one size larger than they actually are.");
+                        bp.IsClassFeature = true;
                         bp.AddComponent<MeleeWeaponSizeChange>(
                             c =>
                             {
@@ -262,7 +541,7 @@ namespace MinosRace
                             });
                         bp.AddComponent<ChangeVisualSize>(c =>
                         {
-                            c.Multiplier = 1.3f;
+                            c.ExtraSizePercent = 0.3f;
                         });
                     });
                 gregarious = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "Gregarious",
@@ -270,20 +549,32 @@ namespace MinosRace
                     {
                         bp.SetName(MC.mc, "Gregarious");
                         bp.SetDescription(MC.mc, "Minos gain a +2 racial bonus on Persuasion (Diplomacy) checks.");
+                        bp.IsClassFeature = true;
+                        bp.AddComponent<AddStatBonus>(
+                        c =>
+                        {
+                            c.Descriptor = Kingmaker.Enums.ModifierDescriptor.Racial;
+                            c.Stat = Kingmaker.EntitySystem.Stats.StatType.SkillPersuasion;
+                            c.Value = 2;
+                        });
                     });
                 emphatic = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "Emphatic",
                    bp =>
                    {
                        bp.SetName(MC.mc, "Emphatic");
                        bp.SetDescription(MC.mc, "Persuasion is always considered a class skill for Minos.");
+                       bp.IsClassFeature = true;
+                       bp.AddComponent<AddClassSkill>(c => { c.Skill = Kingmaker.EntitySystem.Stats.StatType.SkillPersuasion; });
+
                    });
-                minosweaponfamiliarity =  Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "minosweaponfamiliarity",
+                minosweaponfamiliarity = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "minosweaponfamiliarity",
                    bp =>
                    {
-                       bp.SetName(MC.mc, "Weapon familiarity");
+                       bp.SetName(MC.mc, "Minos weapon familiarity");
                        bp.SetDescription(MC.mc, "Minos are proficient with greataxes and earth breakers.");
                        bp.AddComponent<AddProficiencies>(
-                           c => {
+                           c =>
+                           {
                                c.WeaponProficiencies = c.WeaponProficiencies.AddToArray(Kingmaker.Enums.WeaponCategory.EarthBreaker)
                                .AddToArray(Kingmaker.Enums.WeaponCategory.Greataxe);
                            });

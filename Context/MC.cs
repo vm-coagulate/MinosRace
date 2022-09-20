@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Kingmaker.UnitLogic.Class.LevelUp;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -24,6 +25,7 @@ namespace MinosRace.Context
         }
         public override void LoadAllSettings()
         {
+          
             string path = $"{LocalizationFolder}{Path.DirectorySeparatorChar}{LocalizationFile}";
             if (!Directory.Exists(LocalizationFolder))
             {

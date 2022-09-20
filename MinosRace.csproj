@@ -48,6 +48,14 @@
       <HintPath>..\..\WrathBloodlineMod\WrathBloodlineMod\bin\Debug\Owlcat.Runtime.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Owlcat.Runtime.UI">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Pathfinder Wrath of the Righteous\Wrath_Data\Managed\Owlcat.Runtime.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Owlcat.Runtime.Validation">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Pathfinder Wrath of the Righteous\Wrath_Data\Managed\Owlcat.Runtime.Validation.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -62,6 +70,11 @@
     </Reference>
     <Reference Include="UniRx">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Pathfinder Wrath of the Righteous\Wrath_Data\Managed\UniRx.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Pathfinder Wrath of the Righteous\Wrath_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\GOG Galaxy\Games\Pathfinder Wrath of the Righteous\Wrath_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
@@ -78,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChangeVisualSize.cs" />
+    <Compile Include="ColorKer.cs" />
     <Compile Include="Context\MC.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -92,6 +106,9 @@
     <None Include="Info.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
