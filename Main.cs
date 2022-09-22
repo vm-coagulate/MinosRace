@@ -60,7 +60,7 @@ namespace MinosRace
             return true;
         }
         [HarmonyPatch(typeof(BlueprintsCache), "Init")]
-        static class BlueprintsCache_Init_Patch
+        public static class BlueprintsCache_Init_Patch
         {
             static bool Initialized = false;
             static BlueprintFeature destinyBeyondbirth, minosHorns, beeingBuff, gregarious, emphatic, Minosweaponfamiliarity;
@@ -79,7 +79,7 @@ namespace MinosRace
                 AddHeritages(minosRace);
             }
 
-            private static void PreloadResources()
+            public static void PreloadResources()
             {
                 //List<string> resources = new List<string>() {
                 //"bb6988a21733fad4296ad22537248fea",
@@ -102,28 +102,42 @@ namespace MinosRace
                 //}
                 KingmakerEquipmentEntity humanbody = BlueprintTools.GetBlueprint<KingmakerEquipmentEntity>("3bdac1aeeac9158489bb53916b303271");
                 humanbody.m_FemaleArray[0].Load();
+                MC.Log($"MHeadCount: {TieflingRace.MaleOptions.m_Heads.Length}");
                 foreach (var item in TieflingRace.MaleOptions.m_Heads)
                 {
-                    MC.mc.Logger.Log("Preloading " + item.ToString());
+                    MC.mc.Logger.Log("Preloading " + item.AssetId);
                     item.Load();
                 }
+                MC.Log($"FHeadCount: {TieflingRace.FemaleOptions.m_Heads.Length}");
                 foreach (var item in TieflingRace.FemaleOptions.m_Heads)
                 {
-                    MC.mc.Logger.Log("Preloading " + item.ToString());
+                    MC.mc.Logger.Log("Preloading " + item.AssetId);
 
+                    item.Load();
+                }
+                foreach (var item in TieflingRace.MaleOptions.Hair)
+                {
+                    item.Load();
+                }
+                foreach (var item in TieflingRace.FemaleOptions.Hair)
+                {
                     item.Load();
                 }
                 var preset = TieflingRace.Presets[0];
                 {
+                    MC.Log($"MSkin: {preset.m_Skin.Get().m_MaleArray.Length}");
+
                     foreach (var item in preset.m_Skin.Get().m_MaleArray)
                     {
-                        MC.mc.Logger.Log("Preloading " + item.ToString());
+                        MC.mc.Logger.Log("Preloading " + item.AssetId);
 
                         item.Load();
                     }
+                    MC.Log($"FSkin: {preset.m_Skin.Get().m_FemaleArray.Length}");
+
                     foreach (var item in preset.m_Skin.Get().m_FemaleArray)
                     {
-                        MC.mc.Logger.Log("Preloading " + item.ToString());
+                        MC.mc.Logger.Log("Preloading " + item.AssetId);
 
                         item.Load();
                     }
@@ -142,10 +156,15 @@ namespace MinosRace
                     {
                         bp.m_MaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
                             new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="3DC74FD208974CDDA9B53864635CC1E2".ToLower()},
-                        new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="a15b0963b1a047f7b151a1e4a0f38281".ToLower() } };
+                        new Kingmaker.ResourceLinks.EquipmentEntityLink()
+
+                        {AssetId="a15b0963b1a047f7b151a1e4a0f38281".ToLower() } };
                         bp.m_FemaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
                             new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="9F18B0C4E57646DDA309DABD030A4B79".ToLower()},
-                        new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="a15b0963b1a047f7b151a1e4a0f38281".ToLower() } };
+                        new Kingmaker.ResourceLinks.EquipmentEntityLink()
+                        //{ AssetId=tieflingskin.m_FemaleArray[1].AssetId } };
+                        {AssetId="a15b0963b1a047f7b151a1e4a0f38281".ToLower() } };
+
                     });
                 var standardpreset = Helpers.CreateBlueprint<BlueprintRaceVisualPreset>(MC.mc, "minosStandardVisual",
                     bp =>
@@ -194,18 +213,27 @@ namespace MinosRace
                         thinpreset.ToReference<BlueprintRaceVisualPresetReference>() };
                         bp.MaleOptions = new CustomizationOptions()
                         {
-                            m_Heads = 
+                            m_Heads =
                             new Kingmaker.ResourceLinks.EquipmentEntityLink[]
                             {
-                            MakeEELink("8F54696DE3524E67BED4FBF41BAE13BA".ToLower()),
-                            MakeEELink("2F97A2D7186B4DA08737DADDF29C5C40".ToLower()),
-                            MakeEELink("38E57963F5D8430D8D0F0F5EB809F72D".ToLower()),
-                            MakeEELink("3F3C16C2626A446BBB8932C3539F4CB9".ToLower()),
-                            MakeEELink("7E8973B0DC58464F851B8ED610175E08".ToLower()),
+                                MakeEELink("8F54696DE3524E67BED4FBF41BAE13BA".ToLower()),
+                                MakeEELink("2F97A2D7186B4DA08737DADDF29C5C40".ToLower()),
+                                MakeEELink("38E57963F5D8430D8D0F0F5EB809F72D".ToLower()),
+                                MakeEELink("3F3C16C2626A446BBB8932C3539F4CB9".ToLower()),
+                                MakeEELink("7E8973B0DC58464F851B8ED610175E08".ToLower()),
 
                             },
                             m_Eyebrows = TieflingRace.MaleOptions.m_Eyebrows,
-                            m_Hair = TieflingRace.MaleOptions.m_Hair,
+                            m_Hair = new EquipmentEntityLink[] {
+                                MakeEELink( "Hair5AFC439F4ED0861D3E0DDBB57893".ToLower()),
+                                MakeEELink( "HairA33789FA4F009EF55A3F08AD4D7A".ToLower()),
+                                MakeEELink( "HairBF9CE7304284B323B2A739B58F10".ToLower()),
+                                MakeEELink( "Hair06F385AE4927B303100A82D1EA2B".ToLower()),
+                                MakeEELink( "HairA1A81EDE4721918787B1BEB2BB85".ToLower()),
+                                MakeEELink( "Hair00A17B25478881AC7020B47BA079".ToLower()),
+                                MakeEELink( "HairCA2D95194F059836FB431C9F305C".ToLower()),
+                                MakeEELink( "HairA325D29940F4B830EF2EBBCD6A28".ToLower()),
+                            },
                             Horns = TieflingRace.MaleOptions.Horns
                         };
 
@@ -224,7 +252,18 @@ namespace MinosRace
 
 
                             m_Eyebrows = TieflingRace.FemaleOptions.m_Eyebrows,
-                            m_Hair = TieflingRace.FemaleOptions.m_Hair,
+                            m_Hair = new EquipmentEntityLink[]
+                            {
+                             MakeEELink("Hair136618EC4F4EA6680C1767AD8351".ToLower() ),
+                             MakeEELink("Hair7A9700144F9F838A51A91958DCC9".ToLower() ),
+                             MakeEELink("Hair8FDB551C4ABCB7A3E3CFF5F1BDC5".ToLower() ),
+                             MakeEELink("Hair74A96C214B89A36EF1A7C88FABFF".ToLower() ),
+                             MakeEELink("Hair93629CBB473C9C9A104978AAF127".ToLower() ),
+                             MakeEELink("Hair05CD4EDC4560A85499CE2C75E9AD".ToLower() ),
+                             MakeEELink("Hair3B71AF4F487E916EB7B8A5E2C39F".ToLower() ),
+                             MakeEELink("HairA029D7214C949BFB4B391B846AC2".ToLower() ),
+                             MakeEELink("HairA325D29940F4B830EF2EBBCD6A28".ToLower()),
+                            },
                             Horns = TieflingRace.FemaleOptions.Horns
                         }; ;
                         bp.RaceId = Race.Catfolk;

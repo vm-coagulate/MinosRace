@@ -13,6 +13,7 @@ using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.UnitLogic.Parts;
 using Kingmaker.Visual.CharacterSystem;
 using MinosRace.Context;
+using Owlcat.Runtime.Core.Utils;
 using Owlcat.Runtime.UI.Controls.Button;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,32 @@ namespace MinosRace
     {
         public static string minosTailID = "a15b0963b1a047f7b151a1e4a0f38281";
         public static string tieflingTailID = "d15dbf2912cd6f94492a9e1053aa0ebd";
+        public static List<Color> HardcodedColors = new List<Color>()
+        {
+            //1 color for each human hair color
+            new Color( 30/255.0f,30/255.0f,30/255.0f ),      //0
+            new Color( 48/255.0f,44/255.0f,38/255.0f ),      //1
+            new Color( 66/255.0f,60/255.0f,55/255.0f ),      //2 2
+            new Color( 44/255.0f,32/255.0f,27/255.0f ),      // 3
+            new Color( 71/255.0f,52/255.0f,45/255.0f ),      // 4
+            new Color( 104/255.0f,77/255.0f,52/255.0f ),     // 5
+            new Color( 150/255.0f,126/255.0f,100 /255.0f),       // 6
+            new Color( 200/255.0f,170/255.0f,140 /255.0f),       // 7
+            new Color( 233/255.0f,222/255.0f,194 /255.0f),   //8
+            new Color( 124/255.0f,55/255.0f,5/255.0f ),      //9
+            new Color( 214/255.0f,125/255.0f,7/255.0f),
+            new Color( 225/255.0f,165/255.0f,100 /255.0f),
+            new Color( 233/255.0f,196/255.0f,166/255.0f ),
+            new Color( 70/255.0f,74/255.0f,79 /255.0f),
+            new Color( 121/255.0f,126/255.0f,134 /255.0f),
+            new Color( 208/255.0f,105/255.0f,96/255.0f ),
+            new Color( 184/255.0f,63/255.0f,53/255.0f ),
+            new Color( 100/255.0f,27/255.0f,27/255.0f ),
+            new Color( 214/255.0f,214/255.0f,214/255.0f  ),////
+            new Color( 206/255.0f,196/255.0f,184 /255.0f),////
+            new Color( 188/255.0f,200/255.0f,210 /255.0f),////
+
+        };
         [HarmonyPatch(nameof(DollState.GetHairEntities)), HarmonyPostfix]
         public static void HairEntitiesPostfix_patch(ref List<DollState.EEAdapter> __result, DollState __instance)
         {
@@ -60,7 +87,7 @@ namespace MinosRace
         [HarmonyPatch(nameof(DollState.GetSkinEntities)), HarmonyPostfix]
         public static void SkinEntitiesPostfix_patch(ref List<DollState.EEAdapter> __result, DollState __instance)
         {
-            MC.mc.Logger.Log("skinentities ");
+            MC.Log("skinentities ");
             if (__result.Any(p => p.AssetId == minosTailID))
             {
                 MC.mc.Logger.Log("Removing tail from skin entities");
@@ -69,8 +96,26 @@ namespace MinosRace
 
             }
         }
+        [HarmonyPatch(nameof(DollState.ApplyRamps), typeof(Character))]
+        [HarmonyPostfix]
+        public static void AplyRamp_PostfixPatch(Character character, DollState __instance)
+        {
+            MC.Log("ApplyRamp " + character.name);
+            var rampindex = character.m_RampIndices.Where(p => p.EquipmentEntity.name == minosTailID).FirstOrDefault();
+            if (rampindex != null)
+            {
 
+                //grab color 
+                var color = HardcodedColors[rampindex.PrimaryIndex];
+                MC.Log($"Recoloring tail to {rampindex.PrimaryIndex}");
+                //apply color to tail
+                rampindex.EquipmentEntity.OutfitParts[0].m_Material.color = color;
+                /*MC.Log($"color:{rampindex.EquipmentEntity.OutfitParts[0].m_Material.color.r}:" +
+                    $"{rampindex.EquipmentEntity.OutfitParts[0].m_Material.color.g}:" +
+                    $"{rampindex.EquipmentEntity.OutfitParts[0].m_Material.color.b}");*/
 
+            }
+        }
     }
 
     [HarmonyPatch(typeof(AssetBundle))]
@@ -78,10 +123,10 @@ namespace MinosRace
     {
         static CharacterColorsProfile minosbodycolorprofile = (CharacterColorsProfile)ScriptableObject.CreateInstance(typeof(CharacterColorsProfile));
         static string tieflingTailID = "d15dbf2912cd6f94492a9e1053aa0ebd";
-        static string aHumanHairID = "ee3945f41269aed4b9fcb6304c3fda79";
-        static string humanBodyID = "bb6988a21733fad4296ad22537248fea";
+        static string aHumanHairID = "ee3945f41269aed4b9fcb6304c3fda79";//"d174619e428101e41b5675bd6286b1d4"//
+        static string humanFBodyID = "bb6988a21733fad4296ad22537248fea";
+        static string humanMBodyID = "e7c86166041c1e04a92276abdab68afa";
 
-    
         static List<Texture2D> primaryRamps = null;
         static List<Texture2D> primaryHairRamps = null;
 
@@ -101,88 +146,254 @@ namespace MinosRace
             {"a8b95db20e630214dabfb79424494c34",  "38E57963F5D8430D8D0F0F5EB809F72D".ToLower()  },
             {"cdc8632dd9b07744eb7baa143e39bf06",  "3F3C16C2626A446BBB8932C3539F4CB9".ToLower()   },
             {"a957a3408601f9046b56015f6c40a8d3",  "7E8973B0DC58464F851B8ED610175E08".ToLower()   },
-            {"d15dbf2912cd6f94492a9e1053aa0ebd",  "a15b0963b1a047f7b151a1e4a0f38281".ToLower()   }//tail
+            {"d15dbf2912cd6f94492a9e1053aa0ebd",  "a15b0963b1a047f7b151a1e4a0f38281".ToLower()   },//tail
+            //hairs
+             {"d174619e428101e41b5675bd6286b1d4",   "Hair5AFC439F4ED0861D3E0DDBB57893".ToLower() },
+             {"1730d9ec670411b49b6e4c0222abbd25" ,  "HairA33789FA4F009EF55A3F08AD4D7A".ToLower() },
+             {"e60c9687e2e852143b0ddd32d4d65c0b" ,  "HairBF9CE7304284B323B2A739B58F10".ToLower() },
+             {"50eac92ba30862940be4f70d329d070a" ,  "Hair06F385AE4927B303100A82D1EA2B".ToLower() },
+             {"5509e7a1d63e1b14097292be114e4d00" ,  "HairA1A81EDE4721918787B1BEB2BB85".ToLower() },
+             {"05eb3b064eb501149b1715156850bb8f" ,  "Hair00A17B25478881AC7020B47BA079".ToLower() },
+             {"58115a09ef40db046adc4bb99c1ec5b8" ,  "HairCA2D95194F059836FB431C9F305C".ToLower() },
+             {"b85db19d7adf6aa48b5dd2bb7bfe1502" ,  "HairA325D29940F4B830EF2EBBCD6A28".ToLower() },
+             {"afa22656ed5030c4ba273583ba2b3a16" ,  "Hair136618EC4F4EA6680C1767AD8351".ToLower() },
+             {"d71d2e53fce0f1d4baad8b20c8266676" ,  "Hair7A9700144F9F838A51A91958DCC9".ToLower()  },
+             {"195bf2c26a914dc439121c5fdbded81f" ,  "Hair8FDB551C4ABCB7A3E3CFF5F1BDC5".ToLower() },
+             {"c81febf186ba543438e5dec7d1c9bcf7" ,  "Hair74A96C214B89A36EF1A7C88FABFF".ToLower() },
+             {"ee38a6b141c8ac54697fba55ce144094" ,  "Hair93629CBB473C9C9A104978AAF127".ToLower() },
+             {"103e1f478c298a748bb13445840bc4c5" ,  "Hair05CD4EDC4560A85499CE2C75E9AD".ToLower() },
+             {"01adb2fc579b26a419a6ea83867c824b" ,  "Hair3B71AF4F487E916EB7B8A5E2C39F".ToLower() },
+             {"d90a0bf179ad5884a98092b58d8f76ad" ,  "HairA029D7214C949BFB4B391B846AC2".ToLower() },
 
         };
+        private static bool tailpatched;
 
+        private static bool minosAssetRequested=false;
+        [HarmonyPatch(nameof(AssetBundle.LoadAsset), typeof(string), typeof(Type)), HarmonyPrefix]
+        public static bool LoadAsset_Prefix(ref string name, Type type,
+            ref UnityEngine.Object __result)
+        {
+            minosAssetRequested = false;
+            // MC.Log("LoadAsset prefix");
+            foreach (var item in guids.Keys)
+            {
+                if (guids[item] == name)
+                {
+                    MC.Log($"minos asset requested, changed {name} to {item}");
+                    name = item;
+                    minosAssetRequested = true;
+                }
+            }
+            //MC.Log("Loadasset prefix exit");
 
-        //
+            return true;
+            //try
+            //{
+            //    if (guids.Values.Any(p => p == name))
+            //    {
+            //        MC.Log("loading minos resource");
+            //        __result = Res.Get<EquipmentEntity>(name);
+            //        if (__result != null)
+            //            return true;
+            //    }
+            //    return false;
+            //}
+            //catch (Exception e)
+            //{
+            //    MC.Log(e.Message);
+            //    return false;
+            //}
+
+        }
         //public Object LoadAsset(string name, Type type)
         [HarmonyPatch(nameof(AssetBundle.LoadAsset), typeof(string), typeof(Type)), HarmonyPostfix]
-        public static void LoadAsset(string name, ref UnityEngine.Object __result)
+        public static void LoadAsset(string name, Type type, ref UnityEngine.Object __result)
         {
+            if(minosAssetRequested)
+            {
+                MC.Log("Minos asset requested postfix");
+                name = guids[name];
+                minosAssetRequested = false;
+            }
+            if (__result == null)
+            {
+                MC.Log($"LoadAsset {name} failed");
+                return;
+            }
+            if (!(__result is EquipmentEntity))
+            {
+                return;
+
+            }
+
             if (name == aHumanHairID)
             {
-                if (__result is EquipmentEntity)
+                MC.mc.Logger.Log($"Caching hair ramp: {name}");
+                var humanHair = __result as EquipmentEntity;
+                primaryHairRamps = new List<Texture2D>();
+                primaryHairRamps.AddRange(humanHair.PrimaryRamps);
+                if (minosAssets.ContainsKey(guids[tieflingTailID]))
                 {
-                    MC.mc.Logger.Log($"Caching hair ramp: {name}");
-                   var humanHair= __result as EquipmentEntity;
-                    primaryHairRamps = new List<Texture2D>();
-                    primaryHairRamps.AddRange(humanHair.PrimaryRamps);
-                    if (minosAssets.ContainsKey(guids[tieflingTailID]))
+                    if (!tailpatched)
                     {
-                        minosAssets[guids[tieflingTailID]].PrimaryColorsProfile = ScriptableObject.CreateInstance<CharacterColorsProfile>();
-                        minosAssets[guids[tieflingTailID]].m_PrimaryRamps.Clear();
-                        minosAssets[guids[tieflingTailID]].m_PrimaryRamps.AddRange(primaryHairRamps);
-
-                        minosAssets[guids[tieflingTailID]].PrimaryColorsProfile.Ramps = minosAssets[guids[tieflingTailID]].m_PrimaryRamps;
+                        ModifyTail(minosAssets[guids[tieflingTailID]], null);
+                        PatchTail(minosAssets[guids[tieflingTailID]], primaryHairRamps);
+                        tailpatched = true;
+                    }
+                }
+                foreach (var item in minosAssets.Values)
+                {
+                    if (item.name.StartsWith("hair"))
+                    {
+                        PatchEE(item);
                     }
                 }
             }
-
-            if (name==humanBodyID)
+            if (name == humanFBodyID)
             {
-                MC.mc.Logger.Log($"Caching body ramp: {name}");
+                MC.mc.Logger.Log($"Caching body ramp: {name} ");
+                MC.Log($"humanbody , type:{__result.GetType()}");
                 var humanBody = __result as EquipmentEntity;
-                primaryRamps = new List<Texture2D>();
-                primaryRamps.AddRange(humanBody.PrimaryRamps);
-
-                foreach (var item in minosAssets.Values.Where(p => p.name != guids[tieflingTailID]))
+                if (humanBody == null)
                 {
-                    if (item.m_PrimaryRamps != null)
+                    MC.Log($"humanbody is null , type:{__result.GetType()}");
+
+                }
+                primaryRamps = new List<Texture2D>();
+                if (humanBody.PrimaryRamps == null)
+                {
+                    MC.mc.Logger.Log("humanbody primaryramp null");
+                }
+                else
+                {
+                    MC.Log("ok 1");
+                }
+                primaryRamps.AddRange(humanBody.PrimaryRamps);
+                if (minosAssets == null)
+                {
+                    MC.mc.Logger.Log("minosAssets  null");
+                }
+                else
+                {
+                    MC.Log($"ok 2, count={minosAssets.Count}");
+                }
+                foreach (var item in minosAssets.Values)
+                {
+                    if (name != guids[tieflingTailID] && !name.StartsWith("hair"))
                     {
-                        item.m_PrimaryRamps.AddRange(primaryRamps);
-                        item.PrimaryColorsProfile.Ramps = item.m_PrimaryRamps;
+                        PatchEE(item);
                     }
                 }
             }
             else if (guids.ContainsKey(name))
             {
-                var tieflingAsset = (__result as EquipmentEntity);
-                if (tieflingAsset != null)
+                if (minosAssets.ContainsKey(guids[name]))
                 {
-                    MC.mc.Logger.Log($"Added new EE with new ramp: {name}:{tieflingAsset.ToString()}");
-                    var ma = Clone(tieflingAsset);
-                    minosAssets.Add(guids[name].ToLower(), ma);
-                    if (tieflingTailID == name && primaryHairRamps != null)
+                    MC.Log("Asset already copied");
+                    if (!ResourcesLibrary.HasLoadedResource(guids[name]))
                     {
-                        ma.PrimaryColorsProfile = ScriptableObject.CreateInstance<CharacterColorsProfile>();
-                        ma.m_PrimaryRamps.AddRange(primaryHairRamps);
-                        ma.PrimaryColorsProfile.Ramps = ma.m_PrimaryRamps;
+                        MC.Log("Not in resiurceslib!!!");
+                        Res.Refresh(guids[name]);
                     }
-                    else
+                }
+                else
+                {
+
+                    var tieflingAsset = (__result as EquipmentEntity);
+                    if (tieflingAsset != null)
                     {
-                        if (primaryRamps != null)
+                        MC.mc.Logger.Log($"Added new EE with new ramp: {name}:{tieflingAsset.name}");
+                        var ma = Clone(tieflingAsset, tieflingTailID == name);
+                        ma.name = guids[name];
+
+
+                        if (tieflingTailID == name && primaryHairRamps != null)
                         {
-                            ma.m_PrimaryRamps.AddRange(primaryRamps);
-                            ma.PrimaryColorsProfile.Ramps = ma.m_PrimaryRamps;
-
+                            if (!tailpatched)
+                            {
+                                ModifyTail(ma, tieflingAsset);
+                                PatchTail(ma, primaryHairRamps);
+                                tailpatched = true;
+                            }
                         }
-                    }
-                    var loadedResource = new ResourcesLibrary.LoadedResource();
-                    loadedResource.AssetId = guids[name].ToLower();
-                    ResourcesLibrary.StoreResource<EquipmentEntity>(loadedResource, ma);
-                    ResourcesLibrary.s_LoadedResources.Add(loadedResource.AssetId, loadedResource);
+                        else
+                        {
+                            PatchEE(ma);
+                        }
+                        minosAssets.Add(guids[name].ToLower(), ma);
+                        Res.Put(guids[name].ToLower(), ma);
 
+                    }
+                }
+            }
+            else if (guids.Values.Contains(name))
+            {
+                MC.Log($"Getting minos asset {name}");
+                __result = Res.Get<EquipmentEntity>(name);
+            }
+            // MC.Log("Loadasset postfix exit");
+        }
+
+        private static void PatchEE(EquipmentEntity ma)
+        {
+            MC.Log($"Patching ma {ma.name}");
+            if (ma.name.StartsWith("hair"))
+            {
+                if (primaryHairRamps != null)
+                {
+                    ma.m_PrimaryRamps.Clear();
+                    ma.m_PrimaryRamps.AddRange(primaryHairRamps);
+                    ma.PrimaryColorsProfile.Ramps = ma.m_PrimaryRamps;
+                }
+            }
+            else
+            {
+                if (primaryRamps != null)
+                {
+                    ma.m_PrimaryRamps.Clear();
+                    ma.m_PrimaryRamps.AddRange(primaryRamps);
+                    ma.PrimaryColorsProfile.Ramps = ma.m_PrimaryRamps;
                 }
             }
         }
 
-        private static EquipmentEntity Clone(EquipmentEntity ee)
+        private static void PatchTail(EquipmentEntity ma, List<Texture2D> _primaryHairRamps)
         {
+            MC.Log("patching at 1");
+            ma.PrimaryColorsProfile = ScriptableObject.CreateInstance<CharacterColorsProfile>();
+            ma.m_PrimaryRamps.AddRange(_primaryHairRamps);
+            //ma.BakedTextures = null;//.ColorRamps=ma.m_PrimaryRamps;
+            ma.PrimaryColorsProfile.Ramps = ma.m_PrimaryRamps;
+
+            ma.ColorPresets = null;
+        }
+
+        private static EquipmentEntity Clone(EquipmentEntity ee, bool logIt = false)
+        {
+            //var ret = Helpers.CreateCopy<EquipmentEntity>(ee);
             EquipmentEntity ret = (EquipmentEntity)ScriptableObject.CreateInstance(typeof(EquipmentEntity));
-            ret.BakedTextures = ee.BakedTextures;
-            ret.BodyParts = ee.BodyParts;
+            if (logIt)
+            {
+                MC.Log($"Bakedtextures :" + ee.BakedTextures?.ToString());
+            }
+            ret.BakedTextures = Helpers.CreateCopy(ee.BakedTextures);
+            if (logIt)
+            {
+                MC.Log($"BodypartCount:{ee.BodyParts.Count()}");
+                foreach (var item in ee.BodyParts)
+                {
+                    MC.Log($"bodypart type:{item.m_Type}");
+                }
+            }
+            ret.BodyParts = Helpers.CreateCopy(ee.BodyParts);
+            if (logIt)
+            {
+                MC.Log($"Ret BodypartCount:{ret.BodyParts.Count()}");
+                foreach (var item in ret.BodyParts)
+                {
+                    MC.Log($"bodypart type:{item.m_Type}");
+                }
+            }
             ret.CantBeHiddenByDollRoom = ee.CantBeHiddenByDollRoom;
             ret.ColorPresets = ee.ColorPresets;
             ret.IsExportEnabled = ee.IsExportEnabled;
@@ -195,13 +406,13 @@ namespace MinosRace
             ret.m_SecondaryRamps = ee.m_SecondaryRamps;
             ret.m_SpecialPrimaryRamps = ee.m_SpecialPrimaryRamps;
             ret.m_SpecialSecondaryRamps = ee.m_SpecialSecondaryRamps;
-            ret.OutfitParts = ee.OutfitParts;
+            ret.OutfitParts = Helpers.CreateCopy(ee.OutfitParts);
             ret.PrimaryColorsAvailableForPlayer = ee.PrimaryColorsAvailableForPlayer;
-            ret.PrimaryColorsProfile = minosbodycolorprofile;
+            ret.PrimaryColorsProfile = new CharacterColorsProfile();
             {
-                minosbodycolorprofile.Ramps = ee.PrimaryColorsProfile.Ramps;
-                minosbodycolorprofile.RampDlcLocks = ee.PrimaryColorsProfile.RampDlcLocks;
-                minosbodycolorprofile.SpecialRamps = ee.PrimaryColorsProfile.SpecialRamps;
+                ret.PrimaryColorsProfile.Ramps = ee.PrimaryColorsProfile.Ramps;
+                ret.PrimaryColorsProfile.RampDlcLocks = ee.PrimaryColorsProfile.RampDlcLocks;
+                ret.PrimaryColorsProfile.SpecialRamps = ee.PrimaryColorsProfile.SpecialRamps;
             };
             ret.SecondaryColorsProfile = ee.SecondaryColorsProfile;
             ret.SecondaryColorsAvailableForPlayer = ee.SecondaryColorsAvailableForPlayer;
@@ -210,6 +421,72 @@ namespace MinosRace
             return ret;
 
         }
+        public static void ModifyTail(EquipmentEntity minosTail, EquipmentEntity tieflingTail)
+        {
+            //minosTail.BodyParts = new List<BodyPart>();
+            //minosTail.BodyParts.AddRange(minosTail.OutfitParts.Select(p => new BodyPart()
+            //{
+            //    RendererPrefab = p.m_Prefab,
+            //    Material = p.m_Material,
+            //    m_SkinnedRenderer = tieflingTail.OutfitParts[0].m_Prefab.
+            //}));
+            //minosTail.OutfitParts = new List<EquipmentEntity.OutfitPart>();
+            //minosTail.OutfitParts[0].m_Material.color = new Color(30, 30, 30);
+            MC.Log($"tailoutfitpart: {minosTail.OutfitParts[0].Special.ToString()}");
+
+            MC.Log($"color:{minosTail.OutfitParts[0].m_Material.color.r}:{minosTail.OutfitParts[0].m_Material.color.g}:{minosTail.OutfitParts[0].m_Material.color.b}");
+        }
+    }
+
+
+    public static class Res
+    {
+        static Dictionary<string, object> resources = new Dictionary<string, object>();
+        public static T Get<T>(string name) where T : UnityEngine.Object
+        {
+            if (resources.ContainsKey(name))
+            {
+                var r = resources[name] as T;
+                if (r != null)
+                {
+                    if (!ResourcesLibrary.HasLoadedResource(name))
+                    {
+                        
+                        var loadedResource = new ResourcesLibrary.LoadedResource();
+                        loadedResource.AssetId = name.ToLower();
+                        ResourcesLibrary.StoreResource<EquipmentEntity>(loadedResource, r);
+                        loadedResource.RequestCounter += 10;
+                        ResourcesLibrary.s_LoadedResources.Add(loadedResource.AssetId, loadedResource);
+                        loadedResource.Resource.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+                        ResourcesLibrary.HoldResource(loadedResource.AssetId);
+                    }
+                }
+                return r;
+            }
+            return null;
+        }
+        public static void Put<T>(string name, T val) where T : UnityEngine.Object
+        {
+            resources.Add(name, val);
+            AddToRL(name, val);
+        }
+
+        private static void AddToRL<T>(string name, T val) where T : UnityEngine.Object
+        {
+            var loadedResource = new ResourcesLibrary.LoadedResource();
+            loadedResource.AssetId = name.ToLower();
+            ResourcesLibrary.StoreResource<T>(loadedResource, val);
+            loadedResource.RequestCounter += 10;
+            ResourcesLibrary.s_LoadedResources.Add(loadedResource.AssetId, loadedResource);
+            ResourcesLibrary.HoldResource(loadedResource.AssetId);
+        }
+
+        public static void Refresh(string name)
+        {
+            AddToRL(name, (UnityEngine.Object)resources[name]);
+
+        }
+
     }
     //    [HarmonyPatch(typeof(CharGenView), nameof(CharGenView.GoToNextPhaseOrComplete))]
     //    public static class CharGenRacePhaseDetailedPCView_PressConfirmOnPhase_Patch

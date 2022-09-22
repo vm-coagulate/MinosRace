@@ -15,7 +15,10 @@ namespace MinosRace.Context
     public class MC : ModContextBase
     {
         public static MC mc;
-
+        public static void Log(string text)
+        {
+            mc.Logger.Log(text);
+        }
         public MC(ModEntry modEntry) : base(modEntry)
         {
 #if DEBUG

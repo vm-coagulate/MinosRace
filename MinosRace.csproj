@@ -93,6 +93,7 @@
     <Compile Include="ChangeVisualSize.cs" />
     <Compile Include="ColorKer.cs" />
     <Compile Include="Context\MC.cs" />
+    <Compile Include="Debugger.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

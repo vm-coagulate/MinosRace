@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TabletopTweaks.Core.Utilities;
+using static MinosRace.Main;
 
 namespace MinosRace
 {
@@ -58,6 +59,10 @@ namespace MinosRace
             MC.mc.Logger.Log("OnViewDidAttach minos scaling");
 
             OnActivate();
+
+            //HACK: load assets for minos
+            BlueprintsCache_Init_Patch.PreloadResources();
+            //HACK END
             base.OnViewDidAttach();
         }
 
