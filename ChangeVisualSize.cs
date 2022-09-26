@@ -62,10 +62,11 @@ namespace MinosRace
 
             //HACK: load assets for minos
             BlueprintsCache_Init_Patch.PreloadResources();
+            Res.RefreshAll();
             //HACK END
             base.OnViewDidAttach();
         }
-
+        
         public override void OnTurnOff()
         {
             MC.mc.Logger.Log("Turning off minos scaling");

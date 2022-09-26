@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Kingmaker.Blueprints;
+using Kingmaker.ResourceLinks;
 using Kingmaker.Settings;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Visual.CharacterSystem;
@@ -14,29 +15,51 @@ using System.Threading.Tasks;
 
 namespace MinosRace
 {
-    [HarmonyPatch(typeof(Character))]
-    public class CharDebugger
-    {
-        [HarmonyPatch(nameof(Character.SetRampIndices), typeof(EquipmentEntity), typeof(int), typeof(int), typeof(int), typeof(int))]
-        [HarmonyPrefix]
-        public static bool SetRampIndices_prefix(EquipmentEntity ee, int primaryRampIndex, int secondaryRampIndex, int primarySpecialRampIndex, int secondarySpecialRampIndex,
-            Character __instance)
-        {
-            if (ee.name == "a15b0963b1a047f7b151a1e4a0f38281")
-            {
-                MC.Log($"Tail primary color count:{ee.m_PrimaryRamps.Count()}");
-                MC.Log($"primaryindex{primaryRampIndex}");
-                var selri = __instance.m_RampIndices.FirstOrDefault((Character.SelectedRampIndices i) => i.EquipmentEntity == ee);
-                MC.Log($"Tail PrimaryIndex: {selri?.PrimaryIndex}");
-            }
-            return true;
-        }
-        [HarmonyPatch(nameof(Character.OnRenderObject))]
-        public static void OnRender_postfix(Character __instance)
-        {
+    //[HarmonyPatch(typeof(Character))]
+    //public class CharDebugger
+    //{
+    //    [HarmonyPatch(nameof(Character.SetRampIndices), typeof(EquipmentEntity), typeof(int), typeof(int), typeof(int), typeof(int))]
+    //    [HarmonyPrefix]
+    //    public static bool SetRampIndices_prefix(EquipmentEntity ee, int primaryRampIndex, int secondaryRampIndex, int primarySpecialRampIndex, int secondarySpecialRampIndex,
+    //        Character __instance)
+    //    {
+    //        if (ee.name == "a15b0963b1a047f7b151a1e4a0f38281")
+    //        {
+    //            MC.Log($"Tail primary color count:{ee.m_PrimaryRamps.Count()}");
+    //            MC.Log($"primaryindex{primaryRampIndex}");
+    //            var selri = __instance.m_RampIndices.FirstOrDefault((Character.SelectedRampIndices i) => i.EquipmentEntity == ee);
+    //            MC.Log($"Tail PrimaryIndex: {selri?.PrimaryIndex}");
+    //        }
+    //        return true;
+    //    }
+    //    [HarmonyPatch(nameof(Character.AddEquipmentEntity),typeof(EquipmentEntityLink),typeof(bool),typeof(int),typeof(int))]
+    //    public static void AddEE_postfix(EquipmentEntityLink eel, bool saved, int primaryRamp, int secondaryRamp ,Character __instance)
+    //    {
+    //        if(AssetPatcher.guids.Values.Any(p=>p== eel.AssetId))
+    //        {
+    //            MC.Log("Add minos EE to char " + eel.AssetId);
+    //        }
+    //    }
+    //    [HarmonyPatch(nameof(Character.OnRenderObject))]
+    //    [HarmonyPostfix]
+    //    public static void OnRender_postfix(Character __instance)
+    //    {
+    //        MC.Log("rendering character ");
 
-        }
-    }
+    //        if (__instance.Race == CharacterStudio.Race.Catfolk)
+    //        {
+    //            MC.Log("rendering catfolk ");
+    //            var ees = __instance.EquipmentEntities.Where(p => AssetPatcher.guids.Values.Any(q => q == p.name)).Select(r => r.name);
+    //            foreach (var item in ees)
+    //            {
+    //                MC.Log($"minosentity: {item}");
+                    
+    //            }
+                
+                
+    //        }
+    //    }
+    //}
 
     [HarmonyPatch(typeof(EquipmentEntity))]
     public class EEDebugger
@@ -49,6 +72,10 @@ namespace MinosRace
             {
                 MC.Log($"needsrepaint {paintedTextures.CheckNeedRepaint(__instance, i.PrimaryIndex, i.SecondaryIndex, i.SpecialPrimaryIndex, i.SpecialSecondaryIndex).ToString()}");
                 MC.Log($"Bodypartcount:{__instance.BodyParts.Count()}");
+            }
+            if(AssetPatcher.guids.Values.Any(p=>p==__instance.name))
+            {
+                MC.Log($"Needsrepaint minospart");
             }
             return true;
         }
@@ -63,8 +90,18 @@ namespace MinosRace
         static void FreeResource_postfix(string assetId,bool held)
         {
             MC.Log($"Free {assetId}");
+            if(AssetPatcher.guids.ContainsKey(assetId))
+            {
+                Res.Refresh(assetId);
+            }
         }
-
+        [HarmonyPatch(nameof(ResourcesLibrary.CleanupLoadedCache))]
+        static void Cleanup_postfix()
+        {
+            MC.Log($"Cleaning up");
+            Res.RefreshAll();
+            
+        }
         //static MethodBase TargetMethod()
         //{
         //    return AccessTools.Method(typeof(ResourcesLibrary), "TryGetResource").MakeGenericMethod(typeof(EquipmentEntity));

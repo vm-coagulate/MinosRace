@@ -132,20 +132,20 @@ namespace MinosRace
 
         public static Dictionary<string, EquipmentEntity> minosAssets = new Dictionary<string, EquipmentEntity>();
 
-        static Dictionary<string, string> guids = new Dictionary<string, string>()
+        public static Dictionary<string, string> guids = new Dictionary<string, string>()
         {
-            {"6a5ae89de41b6b149856718b6058168f",  "9F18B0C4E57646DDA309DABD030A4B79".ToLower() }, //f_body
-            {"7b27b2063f548794e845e0ee8ea7b91b",  "7E54EC353B6B4F6AB71BAAC3EBBDDFBD".ToLower()  },
-            {"4a4afd8ea46ff2e438bb078495bd3531",  "DB683CE3EF724EF6929CE723C5BA986D".ToLower()  },
-            {"49b32d9af554e6742bed805d80ccde93",  "7DCBF6B10FC44FF79AB0C74F8E5899E0".ToLower()  },
-            {"f7fdd6a03bc43da4da6d913a57f28c7c",  "E24AFA3ABEE0418E833E77239DDE8C1A".ToLower()  },
-            {"a88d1147b9c76364db8d34d956bb6fcb",  "0C58485A0FD3482DBCA901E8508B4CD3".ToLower()  },
-            {"d1dcf6b4e326a9d459ee5b2e5b7b7cbc",  "3DC74FD208974CDDA9B53864635CC1E2".ToLower()  }, //m_body
-            {"6ae0e2be0e8f9f54981033b4a61f11ed",  "8F54696DE3524E67BED4FBF41BAE13BA".ToLower()  },
-            {"b354195728faa79449de9b3197f3b449",  "2F97A2D7186B4DA08737DADDF29C5C40".ToLower()  },
-            {"a8b95db20e630214dabfb79424494c34",  "38E57963F5D8430D8D0F0F5EB809F72D".ToLower()  },
-            {"cdc8632dd9b07744eb7baa143e39bf06",  "3F3C16C2626A446BBB8932C3539F4CB9".ToLower()   },
-            {"a957a3408601f9046b56015f6c40a8d3",  "7E8973B0DC58464F851B8ED610175E08".ToLower()   },
+           // {"6a5ae89de41b6b149856718b6058168f",  "9F18B0C4E57646DDA309DABD030A4B79".ToLower() }, //f_body
+            //{"7b27b2063f548794e845e0ee8ea7b91b",  "7E54EC353B6B4F6AB71BAAC3EBBDDFBD".ToLower()  },
+            //{"4a4afd8ea46ff2e438bb078495bd3531",  "DB683CE3EF724EF6929CE723C5BA986D".ToLower()  },
+            //{"49b32d9af554e6742bed805d80ccde93",  "7DCBF6B10FC44FF79AB0C74F8E5899E0".ToLower()  },
+            //{"f7fdd6a03bc43da4da6d913a57f28c7c",  "E24AFA3ABEE0418E833E77239DDE8C1A".ToLower()  },
+            //{"a88d1147b9c76364db8d34d956bb6fcb",  "0C58485A0FD3482DBCA901E8508B4CD3".ToLower()  },
+            ////{"d1dcf6b4e326a9d459ee5b2e5b7b7cbc",  "3DC74FD208974CDDA9B53864635CC1E2".ToLower()  }, //m_body
+            //{"6ae0e2be0e8f9f54981033b4a61f11ed",  "8F54696DE3524E67BED4FBF41BAE13BA".ToLower()  },
+            //{"b354195728faa79449de9b3197f3b449",  "2F97A2D7186B4DA08737DADDF29C5C40".ToLower()  },
+            //{"a8b95db20e630214dabfb79424494c34",  "38E57963F5D8430D8D0F0F5EB809F72D".ToLower()  },
+            //{"cdc8632dd9b07744eb7baa143e39bf06",  "3F3C16C2626A446BBB8932C3539F4CB9".ToLower()   },
+            //{"a957a3408601f9046b56015f6c40a8d3",  "7E8973B0DC58464F851B8ED610175E08".ToLower()   },
             {"d15dbf2912cd6f94492a9e1053aa0ebd",  "a15b0963b1a047f7b151a1e4a0f38281".ToLower()   },//tail
             //hairs
              {"d174619e428101e41b5675bd6286b1d4",   "Hair5AFC439F4ED0861D3E0DDBB57893".ToLower() },
@@ -249,42 +249,42 @@ namespace MinosRace
                     }
                 }
             }
-            if (name == humanFBodyID)
-            {
-                MC.mc.Logger.Log($"Caching body ramp: {name} ");
-                MC.Log($"humanbody , type:{__result.GetType()}");
-                var humanBody = __result as EquipmentEntity;
-                if (humanBody == null)
-                {
-                    MC.Log($"humanbody is null , type:{__result.GetType()}");
+            //if (name == humanFBodyID)
+            //{
+            //    MC.mc.Logger.Log($"Caching body ramp: {name} ");
+            //    MC.Log($"humanbody , type:{__result.GetType()}");
+            //    var humanBody = __result as EquipmentEntity;
+            //    if (humanBody == null)
+            //    {
+            //        MC.Log($"humanbody is null , type:{__result.GetType()}");
 
-                }
-                primaryRamps = new List<Texture2D>();
-                if (humanBody.PrimaryRamps == null)
-                {
-                    MC.mc.Logger.Log("humanbody primaryramp null");
-                }
-                else
-                {
-                    MC.Log("ok 1");
-                }
-                primaryRamps.AddRange(humanBody.PrimaryRamps);
-                if (minosAssets == null)
-                {
-                    MC.mc.Logger.Log("minosAssets  null");
-                }
-                else
-                {
-                    MC.Log($"ok 2, count={minosAssets.Count}");
-                }
-                foreach (var item in minosAssets.Values)
-                {
-                    if (name != guids[tieflingTailID] && !name.StartsWith("hair"))
-                    {
-                        PatchEE(item);
-                    }
-                }
-            }
+            //    }
+            //    primaryRamps = new List<Texture2D>();
+            //    if (humanBody.PrimaryRamps == null)
+            //    {
+            //        MC.mc.Logger.Log("humanbody primaryramp null");
+            //    }
+            //    else
+            //    {
+            //        MC.Log("ok 1");
+            //    }
+            //    primaryRamps.AddRange(humanBody.PrimaryRamps);
+            //    if (minosAssets == null)
+            //    {
+            //        MC.mc.Logger.Log("minosAssets  null");
+            //    }
+            //    else
+            //    {
+            //        MC.Log($"ok 2, count={minosAssets.Count}");
+            //    }
+            //    foreach (var item in minosAssets.Values)
+            //    {
+            //        if (name != guids[tieflingTailID] && !name.StartsWith("hair"))
+            //        {
+            //            PatchEE(item);
+            //        }
+            //    }
+            //}
             else if (guids.ContainsKey(name))
             {
                 if (minosAssets.ContainsKey(guids[name]))
@@ -473,12 +473,19 @@ namespace MinosRace
 
         private static void AddToRL<T>(string name, T val) where T : UnityEngine.Object
         {
-            var loadedResource = new ResourcesLibrary.LoadedResource();
-            loadedResource.AssetId = name.ToLower();
-            ResourcesLibrary.StoreResource<T>(loadedResource, val);
-            loadedResource.RequestCounter += 10;
-            ResourcesLibrary.s_LoadedResources.Add(loadedResource.AssetId, loadedResource);
-            ResourcesLibrary.HoldResource(loadedResource.AssetId);
+            if (!ResourcesLibrary.HasLoadedResource(name))
+            {
+                var loadedResource = new ResourcesLibrary.LoadedResource();
+                loadedResource.AssetId = name.ToLower();
+                ResourcesLibrary.StoreResource<T>(loadedResource, val);
+                loadedResource.RequestCounter += 10;
+                ResourcesLibrary.s_LoadedResources.Add(loadedResource.AssetId, loadedResource);
+                ResourcesLibrary.HoldResource(loadedResource.AssetId);
+            }
+            else
+            {
+                MC.Log($"{name} already in resourceslibrary");
+            }
         }
 
         public static void Refresh(string name)
@@ -487,6 +494,13 @@ namespace MinosRace
 
         }
 
+        internal static void RefreshAll()
+        {
+            foreach (var item in resources.Keys)
+            {
+                Refresh(item);
+            }
+        }
     }
     //    [HarmonyPatch(typeof(CharGenView), nameof(CharGenView.GoToNextPhaseOrComplete))]
     //    public static class CharGenRacePhaseDetailedPCView_PressConfirmOnPhase_Patch

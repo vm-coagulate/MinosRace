@@ -90,6 +90,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddFeature.cs" />
     <Compile Include="ChangeVisualSize.cs" />
     <Compile Include="ColorKer.cs" />
     <Compile Include="Context\MC.cs" />
