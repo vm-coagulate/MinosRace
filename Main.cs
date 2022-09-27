@@ -3,6 +3,7 @@ using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Blueprints.Classes.Prerequisites;
 using Kingmaker.Blueprints.Classes.Selection;
 using Kingmaker.Blueprints.Items.Weapons;
 using Kingmaker.Blueprints.JsonSystem;
@@ -77,6 +78,29 @@ namespace MinosRace
                 PreloadResources();
                 var minosRace = AddNewRace();
                 AddHeritages(minosRace);
+               
+            }
+
+            private static void AddMinosHornFeat(BlueprintFeatureSelection timidMinosTrait)
+            {
+                var gore1d6 = BlueprintTools.GetBlueprint<BlueprintItemWeapon>("daf4ab765feba8548b244e174e7af5be");
+
+                var hornsfeat = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc,"MinosHornsFeat",
+                    bp=>
+                    {
+                        bp.AddComponent<PrerequisiteFeature>(c => { c.m_Feature = timidMinosTrait.ToReference<BlueprintFeatureReference>(); });
+
+                        bp.SetName(MC.mc, "Minos horns");
+                        bp.SetDescription(MC.mc, "Timid Minos have no horn attack, as they are not aggressive enough, however, some can overcome this limitation with training.");
+                        bp.AddComponent<AddAdditionalLimb>(
+                            c =>
+                            {
+                                c.name = "Minos horns";
+                                c.m_Weapon = gore1d6.ToReference<BlueprintItemWeaponReference>();
+                            });
+                        bp.IsClassFeature = true;
+                    });
+                FeatTools.AddAsFeat(hornsfeat);
             }
 
             public static void PreloadResources()
@@ -155,13 +179,13 @@ namespace MinosRace
                 KingmakerEquipmentEntity minosskin = Helpers.CreateBlueprint<KingmakerEquipmentEntity>(MC.mc, "MinosSkin",
                     bp =>
                     {
-                    bp.m_MaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
+                        bp.m_MaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
                         //new Kingmaker.ResourceLinks.EquipmentEntityLink() { AssetId = "3DC74FD208974CDDA9B53864635CC1E2".ToLower() },
                       new Kingmaker.ResourceLinks.EquipmentEntityLink() { AssetId = "e7c86166041c1e04a92276abdab68afa" },
                         new Kingmaker.ResourceLinks.EquipmentEntityLink()
 
                         { AssetId = "a15b0963b1a047f7b151a1e4a0f38281".ToLower() } };
-                    bp.m_FemaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
+                        bp.m_FemaleArray = new Kingmaker.ResourceLinks.EquipmentEntityLink[] {
                            // new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="9F18B0C4E57646DDA309DABD030A4B79".ToLower()},
                             new Kingmaker.ResourceLinks.EquipmentEntityLink(){AssetId="bb6988a21733fad4296ad22537248fea" }, //human body
                         new Kingmaker.ResourceLinks.EquipmentEntityLink()
@@ -530,6 +554,7 @@ namespace MinosRace
                 //add heritage selection to race
 
                 minosRace.m_Features = minosRace.m_Features.AddToArray(heritageSelection.ToReference<BlueprintFeatureBaseReference>());
+                AddMinosHornFeat(TimidMinosTrait);
             }
 
             private static void CreateFeatures(out BlueprintFeature destinyBeyondbirth, out BlueprintFeature minosHorns,
