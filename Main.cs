@@ -90,12 +90,12 @@ namespace MinosRace
                     {
                         bp.AddComponent<PrerequisiteFeature>(c => { c.m_Feature = timidMinosTrait.ToReference<BlueprintFeatureReference>(); });
 
-                        bp.SetName(MC.mc, "Minos horns");
-                        bp.SetDescription(MC.mc, "Timid Minos have no horn attack, as they are not aggressive enough, however, some can overcome this limitation with training.");
+                        bp.SetName(MC.mc, "Bullheaded");
+                        bp.SetDescription(MC.mc, "You are more headstrong than other Timid minos, and able to use your head in battle.");
                         bp.AddComponent<AddAdditionalLimb>(
                             c =>
                             {
-                                c.name = "Minos horns";
+                                c.name = "Bullheaded";
                                 c.m_Weapon = gore1d6.ToReference<BlueprintItemWeaponReference>();
                             });
                         bp.IsClassFeature = true;
@@ -175,6 +175,7 @@ namespace MinosRace
                 BlueprintRaceVisualPreset tiefling_thin = BlueprintTools.GetBlueprint<BlueprintRaceVisualPreset>("4d9124908caec8145b733ecbd2896b23");
                 BlueprintRaceVisualPreset tiefling_thicc = BlueprintTools.GetBlueprint<BlueprintRaceVisualPreset>("8b485a757f883734585da9b8b816d1d6");
                 KingmakerEquipmentEntity tieflingskin = BlueprintTools.GetBlueprint<KingmakerEquipmentEntity>("d38a9d4a2cfe38e499a72b583317f993");
+
 
                 KingmakerEquipmentEntity minosskin = Helpers.CreateBlueprint<KingmakerEquipmentEntity>(MC.mc, "MinosSkin",
                     bp =>
@@ -311,18 +312,23 @@ namespace MinosRace
                 return new Kingmaker.ResourceLinks.EquipmentEntityLink()
                 {
                     AssetId = assetId,
-                    m_Handle = new Kingmaker.ResourceManagement.BundledResourceHandle<EquipmentEntity>()
-                    {
-                        m_AssetId = assetId,
-                        Object = ResourcesLibrary.TryGetResource<EquipmentEntity>(assetId, false, true),
-                        m_Held = true,
-                    },
+                    m_Handle = Kingmaker.ResourceManagement.BundledResourceHandle < EquipmentEntity >.Request
+                    (assetId,true),
+
+                    //m_Handle = new Kingmaker.ResourceManagement.BundledResourceHandle<EquipmentEntity>()
+                    //{
+                    //    m_AssetId = assetId,
+                    //    Object = ResourcesLibrary.TryGetResource<EquipmentEntity>(assetId, false, true),
+                    //    m_Held = true,
+                    //},
                 };
             }
 
             private static void AddHeritages(BlueprintRace minosRace)
             {
                 var extrafeat = BlueprintTools.GetBlueprint<BlueprintFeatureSelection>("247a4068296e8be42890143f451b4b45");
+                BlueprintFeature racialheritage_foricon = BlueprintTools.GetBlueprint<BlueprintFeature>("9df7b68d60544bcf8e5b56c0a4688e04");
+
                 //heritage-none
                 var NoAlternateTrait = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "NoAlternateTrait", bp =>
                 {
@@ -332,7 +338,7 @@ namespace MinosRace
                     bp.HideInUI = true;
                     bp.HideInCharacterSheetAndLevelUp = true;
                     bp.SetName(MC.mc, "Basic");
-                    bp.SetDescription(MC.mc, "Your typical minos.");
+                    bp.SetDescription(MC.mc, "You are a usual exemplar of your race.");
                     bp.AddComponent<AddStatBonus>(
                           c =>
                           {
@@ -548,7 +554,7 @@ namespace MinosRace
                         bp.Groups = bp.Groups.AddToArray(FeatureGroup.Racial);
                         bp.IsClassFeature = true;
                         bp.SetFeatures(NoAlternateTrait, SmallminosTrait, TimidMinosTrait);
-
+                        bp.m_Icon = racialheritage_foricon.Icon;
                     });
 
                 //add heritage selection to race
@@ -565,12 +571,12 @@ namespace MinosRace
                 minosHorns = Helpers.CreateBlueprint<BlueprintFeature>(MC.mc, "MinosHorns",
                     bp =>
                     {
-                        bp.SetName(MC.mc, "Minos horns");
+                        bp.SetName(MC.mc, "Bullheaded");
                         bp.SetDescription(MC.mc, "Minos have horns that deals 1d6 damage.");
                         bp.AddComponent<AddAdditionalLimb>(
                             c =>
                             {
-                                c.name = "Minos horns";
+                                c.name = "Bullheaded";
                                 c.m_Weapon = gore1d6.ToReference<BlueprintItemWeaponReference>();
                             });
                         bp.IsClassFeature = true;
